@@ -24,15 +24,17 @@ app.post('/consulta', async (req, res) => {
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
-      systemInstruction: "Você é um assistente jurídico experiente em Moçambique. " +
-                         "Responda em português de Moçambique, de forma clara e objectiva. " +
-                         "Cite a lei, decreto ou regulamento aplicável sempre que possível. " +
-                         "Seja preciso sobre o contexto legal moçambicano. " +
-                         "Termine sempre recomendando a consulta a um advogado para casos específicos."
+      model: "gemini-1.5-flash"
     });
 
-    const result = await model.generateContent(pergunta);
+    const prompt = "Você é um assistente jurídico experiente em Moçambique. " +
+                   "Responda em português de Moçambique, de forma clara e objectiva. " +
+                   "Cite a lei, decreto ou regulamento aplicável sempre que possível. " +
+                   "Seja preciso sobre o contexto legal moçambicano. " +
+                   "Termine sempre recomendando a consulta a um advogado para casos específicos.\n\n" +
+                   "Pergunta do utilizador: " + pergunta;
+
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const texto = response.text();
 
