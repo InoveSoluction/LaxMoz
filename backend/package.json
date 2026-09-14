@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "@google/generative-ai": "^0.21.0"
+    "firecrawl": "^1.0.0"
   }
 }
