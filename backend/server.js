@@ -64,7 +64,7 @@ app.post('/consulta', async (req, res) => {
           content: `CONTEXTO PESQUISADO NA WEB:\n${contextoWeb}\n\nPERGUNTA DO CIDADÃO: ${pergunta}`
         }
       ],
-      model: "llama-3.1-70b-versatile", // Modelo potente e rápido da Groq
+      model: "llama-3.3-70b-versatile", // Modelo actualizado e suportado pela Groq
       temperature: 0.2,
     });
 
