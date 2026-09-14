@@ -3,13 +3,11 @@
 // nunca dentro do APK.
 
 const express = require('express');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 app.use(express.json());
 
 // A chave API do Gemini deve ser definida no painel do Render
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 app.post('/consulta', async (req, res) => {
   const pergunta = (req.body.pergunta || "").trim();
@@ -64,10 +62,6 @@ app.post('/consulta', async (req, res) => {
   } catch (e) {
     console.error("Erro no backend:", e);
     res.status(500).json({ erro: "Erro interno no servidor: " + e.message });
-  }
-});
-    console.error("Erro no Gemini:", e);
-    res.status(500).json({ erro: "Erro ao consultar a IA (Gemini): " + e.message });
   }
 });
 
