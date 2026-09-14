@@ -1,5 +1,7 @@
 const express = require('express');
-const { FirecrawlApp } = require('firecrawl');
+let FirecrawlApp = require('firecrawl');
+if (FirecrawlApp.default) FirecrawlApp = FirecrawlApp.default;
+
 const app = express();
 app.use(express.json());
 
