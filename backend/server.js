@@ -6,8 +6,8 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY; // definir no painel do Render
-const MODEL = "claude-sonnet-4-6";
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const MODEL = "claude-3-5-sonnet-20241022";
 
 app.post('/consulta', async (req, res) => {
   const pergunta = (req.body.pergunta || "").trim();
@@ -15,8 +15,12 @@ app.post('/consulta', async (req, res) => {
     return res.status(400).json({ erro: "Pergunta vazia." });
   }
 
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(500).json({ erro: "Configuração incompleta: ANTHROPIC_API_KEY não definida no servidor." });
+  }
+
   try {
-    const resposta = await fetch("https://api.anthropic.com/v1/messages", {
+    const apiResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -28,26 +32,31 @@ app.post('/consulta', async (req, res) => {
         max_tokens: 1200,
         system: "Você é um assistente jurídico. Responda em português de Moçambique, " +
                 "de forma clara e objectiva, citando a lei, decreto ou regulamento aplicável " +
-                "quando souber. Use a busca na web para confirmar se há alterações recentes " +
-                "à legislação antes de responder. Termine sempre a recomendar confirmação com " +
+                "quando souber. Termine sempre a recomendar confirmação com " +
                 "um advogado para casos concretos.",
-        messages: [{ role: "user", content: pergunta }],
-        tools: [{ type: "web_search_20250305", name: "web_search" }]
+        messages: [{ role: "user", content: pergunta }]
       })
     });
 
-    const data = await resposta.json();
+    const data = await apiResponse.json();
+
+    if (!apiResponse.ok) {
+      console.error("Erro da API Anthropic:", data);
+      return res.status(apiResponse.status).json({
+        erro: `Erro da IA: ${data.error ? data.error.message : "Desconhecido"}`
+      });
+    }
 
     const texto = (data.content || [])
       .filter(b => b.type === "text")
       .map(b => b.text)
       .join("\n");
 
-    res.json({ resposta: texto || "Não foi possível gerar resposta." });
+    res.json({ resposta: texto || "A IA não retornou conteúdo." });
 
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ erro: "Erro interno ao consultar a IA." });
+    console.error("Erro no backend:", e);
+    res.status(500).json({ erro: "Erro interno ao consultar a IA: " + e.message });
   }
 });
 
