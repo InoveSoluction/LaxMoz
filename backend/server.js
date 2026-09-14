@@ -23,24 +23,49 @@ app.post('/consulta', async (req, res) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash"
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const body = {
+      contents: [{
+        parts: [{
+          text: "Você é um assistente jurídico experiente em Moçambique. " +
+                "Responda em português de Moçambique, de forma clara e objectiva. " +
+                "Cite a lei, decreto ou regulamento aplicável sempre que possível. " +
+                "Seja preciso sobre o contexto legal moçambicano. " +
+                "Termine sempre recomendando a consulta a um advogado para casos específicos.\n\n" +
+                "Pergunta do utilizador: " + pergunta
+        }]
+      }]
+    };
+
+    const apiResponse = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
     });
 
-    const prompt = "Você é um assistente jurídico experiente em Moçambique. " +
-                   "Responda em português de Moçambique, de forma clara e objectiva. " +
-                   "Cite a lei, decreto ou regulamento aplicável sempre que possível. " +
-                   "Seja preciso sobre o contexto legal moçambicano. " +
-                   "Termine sempre recomendando a consulta a um advogado para casos específicos.\n\n" +
-                   "Pergunta do utilizador: " + pergunta;
+    const data = await apiResponse.json();
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const texto = response.text();
+    if (!apiResponse.ok) {
+      console.error("Erro da API Gemini:", data);
+      return res.status(apiResponse.status).json({
+        erro: `Erro da IA (Gemini): ${data.error ? data.error.message : "Erro desconhecido"}`
+      });
+    }
 
-    res.json({ resposta: texto || "O Gemini não conseguiu gerar uma resposta." });
+    const texto = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]
+      ? data.candidates[0].content.parts[0].text
+      : "O Gemini não devolveu conteúdo.";
+
+    res.json({ resposta: texto });
 
   } catch (e) {
+    console.error("Erro no backend:", e);
+    res.status(500).json({ erro: "Erro interno no servidor: " + e.message });
+  }
+});
     console.error("Erro no Gemini:", e);
     res.status(500).json({ erro: "Erro ao consultar a IA (Gemini): " + e.message });
   }
